@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebOrbit - 3D Website Sitemap</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/3d-force-graph"></script>
+    <script src="script.js" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="m-0 p-0 font-sans bg-gray-900 text-gray-100">
+    <div id="controls" class="absolute top-2.5 left-2.5 z-10 bg-black bg-opacity-70 p-4 rounded w-[300px]">
+        <h2 class="mb-4">WebOrbit - 3D Sitemap</h2>
+        <input type="url" id="urlInput" placeholder="Enter website URL (e.g. https://example.com)" required
+               class="w-full mb-2.5 p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
+        
+        <div class="mb-2.5">
+            <label for="maxDepth">Max Depth:</label>
+            <input type="number" id="maxDepth" min="1" max="5" value="3"
+                   class="w-full p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
+        </div>
+        
+        <div class="mb-2.5">
+            <label for="maxPages">Max Pages:</label>
+            <input type="number" id="maxPages" min="10" max="500" value="100"
+                   class="w-full p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
+        </div>
+        
+        <div class="mb-2.5">
+            <label for="sameHost" class="flex items-center">
+                <input type="checkbox" id="sameHost" checked class="mr-2"> Same domain only
+            </label>
+        </div>
+        
+        <button id="crawlButton" 
+                class="w-full p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold border-none rounded cursor-pointer">
+            Generate 3D Sitemap
+        </button>
+        
+        <div id="status" class="mt-2.5 p-2 rounded text-sm"></div>
+    </div>
+    
+    <div id="graphContainer" class="absolute top-0 left-0 w-full h-full"></div>
+</body>
+</html>
