@@ -364,38 +364,121 @@ document.getElementById("layout2d").addEventListener("click", () => {
 
 document.getElementById("centerGraph").addEventListener("click", () => {
   const { nodes } = graph.graphData();
-  if (nodes.length > 0) {
-    const node = nodes[0];
-    graph.centerAt(node.x, node.y, node.z, 1000);
-    graph.zoom(1.5, 1000);
-  }
+  if (nodes.length === 0) return;
+  
+  // Don't interrupt if orbiting
+  if (isOrbiting) return;
+
+  const center = {x: 0, y: 0, z: 0};
+  nodes.forEach(node => {
+    center.x += node.x || 0;
+    center.y += node.y || 0; 
+    center.z += node.z || 0;
+  });
+  
+  center.x /= nodes.length;
+  center.y /= nodes.length;
+  center.z /= nodes.length;
+  
+  graph.cameraPosition(
+    { x: center.x, y: center.y, z: center.z + distance }, // position
+    { x: center.x, y: center.y, z: center.z },            // lookAt
+    1000                                                  // ms transition duration
+  );
 });
 
 document.getElementById("fitGraph").addEventListener("click", () => {
+  // Don't interrupt if orbiting
+  if (isOrbiting) return;
+  
   graph.zoomToFit(1000, 50);
 });
 
 let isOrbiting = false;
-let orbitInterval;
+let orbitInterval = null;
+let distance = 300;
 
 document.getElementById("toggleOrbit").addEventListener("click", () => {
   if (isOrbiting) {
+    // Stop the orbit animation
     clearInterval(orbitInterval);
+    
+    // Re-enable controls
+    graph.enableNavigationControls(true);
+    graph.enableNodeDrag(true);
+    
     isOrbiting = false;
     document.getElementById("toggleOrbit").textContent = "Start Orbit";
+    
+    // Restore normal camera position
+    graph.zoomToFit(1000, 50);
   } else {
+    const graphData = graph.graphData();
+    
+    if (graphData.nodes.length === 0) {
+      return; // Don't start orbit if no data
+    }
+    
+    // Find the center point of the graph
+    const center = {x: 0, y: 0, z: 0};
+    graphData.nodes.forEach(node => {
+      center.x += node.x || 0;
+      center.y += node.y || 0;
+      center.z += node.z || 0;
+    });
+    
+    center.x /= graphData.nodes.length;
+    center.y /= graphData.nodes.length;
+    center.z /= graphData.nodes.length;
+    
+    // Calculate orbit distance - slightly zoomed in from fit state
+    // First determine the appropriate distance based on graph size
+    let maxDist = 0;
+    graphData.nodes.forEach(node => {
+      const dx = (node.x || 0) - center.x;
+      const dy = (node.y || 0) - center.y;
+      const dz = (node.z || 0) - center.z;
+      const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+      maxDist = Math.max(maxDist, dist);
+    });
+    
+    // Use 2x the max distance for a slightly zoomed in view (instead of 4x)
+    distance = Math.max(maxDist * 1.5, 300);
+    
+    // Disable navigation controls during orbit
+    graph.enableNavigationControls(false);
+    graph.enableNodeDrag(false);
+    
+    // Initially position the camera
     let angle = 0;
-    orbitInterval = setInterval(() => {
-      angle += Math.PI / 300;
-      const distance = 300;
-      graph.cameraPosition({
-        x: distance * Math.sin(angle),
-        y: 0,
-        z: distance * Math.cos(angle)
-      });
-    }, 30);
+    graph.cameraPosition(
+      { 
+        x: center.x + distance * Math.sin(angle),
+        y: center.y,
+        z: center.z + distance * Math.cos(angle)
+      },
+      center, // lookAt
+      1000    // transition duration
+    );
+    
+    // After initial positioning, start the orbit
+    setTimeout(() => {
+      if (!isOrbiting) return; // In case user cancelled during transition
+      
+      orbitInterval = setInterval(() => {
+        angle += Math.PI / 2000; // Adjust speed as needed
+        graph.cameraPosition({
+          x: center.x + distance * Math.sin(angle),
+          y: center.y,
+          z: center.z + distance * Math.cos(angle)
+        });
+      }, 10);
+      
+      document.getElementById("toggleOrbit").textContent = "Stop Orbit";
+    }, 1100);
+    
     isOrbiting = true;
-    document.getElementById("toggleOrbit").textContent = "Stop Orbit";
+    document.getElementById("toggleOrbit").textContent = "Starting...";
   }
 });
 
