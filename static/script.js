@@ -444,6 +444,68 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
+
+  // Initialize link width value display
+  const linkWidthSlider = document.getElementById("linkWidth");
+  if (linkWidthSlider) {
+    document.getElementById("linkWidthValue").textContent = linkWidthSlider.value;
+  }
+  
+  // Set up toggle functionality for controls panel
+  document.getElementById("toggleControls").addEventListener("click", function() {
+    const controls = document.getElementById("controls");
+    const expandControls = document.getElementById("expandControls");
+    
+    controls.classList.add("w-0", "h-0", "p-0", "overflow-hidden");
+    controls.style.opacity = "0";
+    
+    setTimeout(() => {
+      controls.classList.add("hidden");
+      expandControls.classList.remove("hidden");
+    }, 300);
+  });
+  
+  // Set up expand functionality for controls panel
+  document.getElementById("expandControls").addEventListener("click", function() {
+    const controls = document.getElementById("controls");
+    const expandControls = document.getElementById("expandControls");
+    
+    expandControls.classList.add("hidden");
+    controls.classList.remove("hidden");
+    
+    setTimeout(() => {
+      controls.classList.remove("w-0", "h-0", "p-0", "overflow-hidden");
+      controls.style.opacity = "1";
+    }, 10);
+  });
+  
+  // Set up toggle functionality for legend
+  document.getElementById("toggleLegend").addEventListener("click", function() {
+    const legend = document.getElementById("legend");
+    const expandLegend = document.getElementById("expandLegend");
+    
+    legend.classList.add("w-0", "h-0", "p-0", "overflow-hidden");
+    legend.style.opacity = "0";
+    
+    setTimeout(() => {
+      legend.classList.add("hidden");
+      expandLegend.classList.remove("hidden");
+    }, 300);
+  });
+  
+  // Set up expand functionality for legend
+  document.getElementById("expandLegend").addEventListener("click", function() {
+    const legend = document.getElementById("legend");
+    const expandLegend = document.getElementById("expandLegend");
+    
+    expandLegend.classList.add("hidden");
+    legend.classList.remove("hidden");
+    
+    setTimeout(() => {
+      legend.classList.remove("w-0", "h-0", "p-0", "overflow-hidden");
+      legend.style.opacity = "1";
+    }, 10);
+  });
 });
 
 document.getElementById("layout3d").addEventListener("click", () => {
@@ -693,6 +755,9 @@ document.getElementById("linkWidth").addEventListener("input", function() {
   document.getElementById("linkWidthValue").textContent = value.toFixed(1);
   
   if (graph) {
-    graph.linkWidth(value);
+    // Set link width while preserving the link color function
+    graph
+      .linkWidth(value)
+      .linkColor((link) => getLinkColor({...link, type: getLinkType(link)}));
   }
 });

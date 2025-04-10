@@ -1,0 +1,34 @@
+/* Transitions for panel collapse/expand */
+.w-0 {
+  width: 0 !important;
+}
+
+.h-0 {
+  height: 0 !important;
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.overflow-hidden {
+  overflow: hidden !important;
+}
+
+/* Ensure smooth transition */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Icon animations */
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Button styles */
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}

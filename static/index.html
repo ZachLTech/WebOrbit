@@ -15,192 +15,225 @@
     </script>
     <script src="script.js" defer type="module"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="m-0 p-0 font-sans bg-gray-900 text-gray-100">
-    <div id="controls" class="absolute top-2.5 left-2.5 z-10 bg-black bg-opacity-70 p-4 rounded w-[300px] max-h-[95vh] overflow-y-auto">
-        <h2 class="mb-4">WebOrbit - 3D Sitemap</h2>
-        <input type="url" id="urlInput" placeholder="Enter website URL (e.g. https://example.com)" required
-               class="w-full mb-2.5 p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
-        
-        <div class="mb-2.5">
-            <label for="maxDepth">Max Depth:</label>
-            <input type="number" id="maxDepth" min="1" max="5" value="3"
-                   class="w-full p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
+    <div id="controls" class="absolute top-2.5 left-2.5 z-10 bg-black bg-opacity-70 p-4 rounded w-[300px] max-h-[95vh] overflow-y-auto transition-all duration-300">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="m-0">WebOrbit - 3D Sitemap</h2>
+            <button id="toggleControls" class="w-6 h-6 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
-        
-        <div class="mb-2.5">
-            <label for="maxPages">Max Pages:</label>
-            <input type="number" id="maxPages" min="10" max="500" value="100"
-                   class="w-full p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
-        </div>
-        
-        <div class="mb-2.5">
-            <label for="sameHost" class="flex items-center">
-                <input type="checkbox" id="sameHost" checked class="mr-2"> Same domain only
-            </label>
-        </div>
-        
-        <div class="mb-2.5">
-            <label for="includeAssets" class="flex items-center">
-                <input type="checkbox" id="includeAssets" checked class="mr-2"> Include assets (images, CSS, JS, etc.)
-            </label>
-        </div>
-        
-        <div class="mb-2.5">
-            <label for="crawlJavaScript" class="flex items-center">
-                <input type="checkbox" id="crawlJavaScript" class="mr-2"> Parse JavaScript for URLs
-            </label>
-        </div>
-        
-        <button id="crawlButton" 
-                class="w-full p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold border-none rounded cursor-pointer">
-            Generate 3D Sitemap
-        </button>
-        
-        <div id="status" class="mt-2.5 p-2 rounded text-sm"></div>
-        
-        <div class="mt-4 border-t border-gray-600 pt-4">
-            <h3 class="mb-2 font-bold">Visualization Controls</h3>
+        <div id="controlsContent">
+            <input type="url" id="urlInput" placeholder="Enter website URL (e.g. https://example.com)" required
+                   class="w-full mb-2.5 p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
             
-            <div class="flex space-x-2 mb-2">
-                <button id="layout3d" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">3D</button>
-                <button id="layout2d" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">2D</button>
-                <button id="centerGraph" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">Center</button>
-                <button id="fitGraph" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">Fit</button>
-            </div>
-            
-            <div class="flex space-x-2 mb-2">
-                <button id="toggleOrbit" class="px-2 py-1 bg-green-600 hover:bg-green-700 rounded">Start Orbit</button>
-                <button id="toggleSimulation" class="px-2 py-1 bg-green-600 hover:bg-green-700 rounded">Pause Simulation</button>
-            </div>
-            
-            <div class="flex space-x-2 mb-2">
-                <button id="orbitControls" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">Orbit Controls</button>
-                <button id="flyControls" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">Fly Controls</button>
+            <div class="mb-2.5">
+                <label for="maxDepth">Max Depth:</label>
+                <input type="number" id="maxDepth" min="1" max="5" value="3"
+                       class="w-full p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
             </div>
             
             <div class="mb-2.5">
-                <label for="linkWidth" class="block text-sm font-medium mb-1">Link Width:</label>
-                <div class="flex items-center space-x-2">
-                    <input type="range" id="linkWidth" min="0.1" max="3" step="0.1" value="1.5" 
-                           class="w-full bg-gray-800 rounded-lg appearance-none cursor-pointer">
-                    <span id="linkWidthValue" class="text-sm w-8 text-center">1.5</span>
-                </div>
+                <label for="maxPages">Max Pages:</label>
+                <input type="number" id="maxPages" min="10" max="500" value="100"
+                       class="w-full p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
             </div>
-        </div>
-        
-        <div class="mt-4 border-t border-gray-600 pt-4">
-            <h3 class="mb-2 font-bold">Search & Filter</h3>
-            <input type="text" id="searchInput" placeholder="Search by URL or path" 
-                   class="w-full mb-2 p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
-                   
-            <div class="mb-2">
-                <label class="block mb-1 text-sm font-medium">Content Types:</label>
-                <div class="grid grid-cols-2 gap-1 p-2 bg-gray-800 border border-gray-600 rounded max-h-36 overflow-y-auto">
-                    <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
-                        <input type="checkbox" value="all" class="content-type-filter mr-2 h-4 w-4 accent-blue-500"> 
-                        <span class="text-sm">All</span>
-                    </label>
-                    <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
-                        <input type="checkbox" value="text/html" class="content-type-filter mr-2 h-4 w-4 accent-blue-400"> 
-                        <span class="text-sm flex items-center">
-                            <span class="w-2 h-2 rounded-full bg-blue-400 mr-1"></span>HTML
-                        </span>
-                    </label>
-                    <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
-                        <input type="checkbox" value="image" class="content-type-filter mr-2 h-4 w-4 accent-green-400"> 
-                        <span class="text-sm flex items-center">
-                            <span class="w-2 h-2 rounded-full bg-green-400 mr-1"></span>Images
-                        </span>
-                    </label>
-                    <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
-                        <input type="checkbox" value="application/javascript" class="content-type-filter mr-2 h-4 w-4 accent-yellow-400"> 
-                        <span class="text-sm flex items-center">
-                            <span class="w-2 h-2 rounded-full bg-yellow-400 mr-1"></span>JavaScript
-                        </span>
-                    </label>
-                    <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
-                        <input type="checkbox" value="text/css" class="content-type-filter mr-2 h-4 w-4 accent-purple-400"> 
-                        <span class="text-sm flex items-center">
-                            <span class="w-2 h-2 rounded-full bg-purple-400 mr-1"></span>CSS
-                        </span>
-                    </label>
-                    <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
-                        <input type="checkbox" value="application" class="content-type-filter mr-2 h-4 w-4 accent-red-400"> 
-                        <span class="text-sm flex items-center">
-                            <span class="w-2 h-2 rounded-full bg-red-400 mr-1"></span>Documents
-                        </span>
-                    </label>
+            
+            <div class="mb-2.5">
+                <label for="sameHost" class="flex items-center">
+                    <input type="checkbox" id="sameHost" checked class="mr-2"> Same domain only
+                </label>
+            </div>
+            
+            <div class="mb-2.5">
+                <label for="includeAssets" class="flex items-center">
+                    <input type="checkbox" id="includeAssets" checked class="mr-2"> Include assets (images, CSS, JS, etc.)
+                </label>
+            </div>
+            
+            <div class="mb-2.5">
+                <label for="crawlJavaScript" class="flex items-center">
+                    <input type="checkbox" id="crawlJavaScript" class="mr-2"> Parse JavaScript for URLs
+                </label>
+            </div>
+            
+            <button id="crawlButton" 
+                    class="w-full p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold border-none rounded cursor-pointer">
+                Generate 3D Sitemap
+            </button>
+            
+            <div id="status" class="mt-2.5 p-2 rounded text-sm"></div>
+            
+            <div class="mt-4 border-t border-gray-600 pt-4">
+                <h3 class="mb-2 font-bold">Visualization Controls</h3>
+                
+                <div class="flex space-x-2 mb-2">
+                    <button id="layout3d" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">3D</button>
+                    <button id="layout2d" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">2D</button>
+                    <button id="centerGraph" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">Center</button>
+                    <button id="fitGraph" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">Fit</button>
+                </div>
+                
+                <div class="flex space-x-2 mb-2">
+                    <button id="toggleOrbit" class="px-2 py-1 bg-green-600 hover:bg-green-700 rounded">Start Orbit</button>
+                    <button id="toggleSimulation" class="px-2 py-1 bg-green-600 hover:bg-green-700 rounded">Pause Simulation</button>
+                </div>
+                
+                <div class="flex space-x-2 mb-2">
+                    <button id="orbitControls" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">Orbit Controls</button>
+                    <button id="flyControls" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">Fly Controls</button>
+                </div>
+                
+                <div class="mb-2.5">
+                    <label for="linkWidth" class="block text-sm font-medium mb-1">Link Width:</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="range" id="linkWidth" min="0.1" max="3" step="0.1" value="1.5" 
+                               class="w-full bg-gray-800 rounded-lg appearance-none cursor-pointer">
+                        <span id="linkWidthValue" class="text-sm w-8 text-center">1.5</span>
+                    </div>
                 </div>
             </div>
             
-            <button id="searchButton" class="w-full p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded">
-                Apply Filters
-            </button>
-        </div>
-        
-        <div class="mt-4 border-t border-gray-600 pt-4">
-            <h3 class="mb-2 font-bold">Selected Node Info</h3>
-            <div id="nodeInfo" class="bg-gray-800 p-2 rounded min-h-[100px] max-h-[150px] text-sm overflow-y-auto overflow-x-hidden break-words">
-                Click on a node to see details
+            <div class="mt-4 border-t border-gray-600 pt-4">
+                <h3 class="mb-2 font-bold">Search & Filter</h3>
+                <input type="text" id="searchInput" placeholder="Search by URL or path" 
+                       class="w-full mb-2 p-2 bg-gray-800 text-gray-100 border border-gray-600 rounded">
+                       
+                <div class="mb-2">
+                    <label class="block mb-1 text-sm font-medium">Content Types:</label>
+                    <div class="grid grid-cols-2 gap-1 p-2 bg-gray-800 border border-gray-600 rounded max-h-36 overflow-y-auto">
+                        <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
+                            <input type="checkbox" value="all" class="content-type-filter mr-2 h-4 w-4 accent-blue-500"> 
+                            <span class="text-sm">All</span>
+                        </label>
+                        <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
+                            <input type="checkbox" value="text/html" class="content-type-filter mr-2 h-4 w-4 accent-blue-400"> 
+                            <span class="text-sm flex items-center">
+                                <span class="w-2 h-2 rounded-full bg-blue-400 mr-1"></span>HTML
+                            </span>
+                        </label>
+                        <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
+                            <input type="checkbox" value="image" class="content-type-filter mr-2 h-4 w-4 accent-green-400"> 
+                            <span class="text-sm flex items-center">
+                                <span class="w-2 h-2 rounded-full bg-green-400 mr-1"></span>Images
+                            </span>
+                        </label>
+                        <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
+                            <input type="checkbox" value="application/javascript" class="content-type-filter mr-2 h-4 w-4 accent-yellow-400"> 
+                            <span class="text-sm flex items-center">
+                                <span class="w-2 h-2 rounded-full bg-yellow-400 mr-1"></span>JavaScript
+                            </span>
+                        </label>
+                        <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
+                            <input type="checkbox" value="text/css" class="content-type-filter mr-2 h-4 w-4 accent-purple-400"> 
+                            <span class="text-sm flex items-center">
+                                <span class="w-2 h-2 rounded-full bg-purple-400 mr-1"></span>CSS
+                            </span>
+                        </label>
+                        <label class="flex items-center p-1 hover:bg-gray-700 rounded transition-colors">
+                            <input type="checkbox" value="application" class="content-type-filter mr-2 h-4 w-4 accent-red-400"> 
+                            <span class="text-sm flex items-center">
+                                <span class="w-2 h-2 rounded-full bg-red-400 mr-1"></span>Documents
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button id="searchButton" class="w-full p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded">
+                    Apply Filters
+                </button>
             </div>
-        </div>
-        
-        <div class="mt-4 border-t border-gray-600 pt-4">
-            <h3 class="mb-2 font-bold">Graph Statistics</h3>
-            <div id="graphStats" class="text-sm">
-                <div>Nodes: <span id="nodeCount">0</span></div>
-                <div>Links: <span id="linkCount">0</span></div>
-                <div>Content Types: <span id="contentTypesCount">0</span></div>
+            
+            <div class="mt-4 border-t border-gray-600 pt-4">
+                <h3 class="mb-2 font-bold">Selected Node Info</h3>
+                <div id="nodeInfo" class="bg-gray-800 p-2 rounded min-h-[100px] max-h-[150px] text-sm overflow-y-auto overflow-x-hidden break-words">
+                    Click on a node to see details
+                </div>
+            </div>
+            
+            <div class="mt-4 border-t border-gray-600 pt-4">
+                <h3 class="mb-2 font-bold">Graph Statistics</h3>
+                <div id="graphStats" class="text-sm">
+                    <div>Nodes: <span id="nodeCount">0</span></div>
+                    <div>Links: <span id="linkCount">0</span></div>
+                    <div>Content Types: <span id="contentTypesCount">0</span></div>
+                </div>
             </div>
         </div>
     </div>
     
-    <div id="legend" class="absolute bottom-2.5 right-2.5 z-10 bg-black bg-opacity-70 p-4 rounded">
-        <h3 class="mb-2 font-bold">Legend</h3>
-        <div class="grid grid-cols-2 gap-2 text-sm">
-            <div class="flex items-center">
-                <div class="w-4 h-4 flex items-center justify-center">
-                    <div class="w-3 h-3" style="clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); background-color: #FFD700;"></div>
-                </div>
-                <span class="ml-1">Root URL</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-3 h-3 rounded-full bg-blue-400 mr-2"></div>
-                <span>HTML</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-3 h-3 rounded-full bg-green-400 mr-2"></div>
-                <span>Image</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-3 h-3 rounded-full bg-yellow-400 mr-2"></div>
-                <span>JavaScript</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-3 h-3 rounded-full bg-purple-400 mr-2"></div>
-                <span>CSS</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-3 h-3 rounded-full bg-red-400 mr-2"></div>
-                <span>Document</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
-                <span>Other</span>
-            </div>
+    <div id="legend" class="absolute bottom-2.5 right-2.5 z-10 bg-black bg-opacity-70 p-4 rounded transition-all duration-300">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="m-0 font-bold">Legend</h3>
+            <button id="toggleLegend" class="w-6 h-6 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
-        <div class="mt-2 border-t border-gray-600 pt-2">
-            <div class="flex items-center">
-                <div class="w-8 h-0.5 bg-green-500 mr-2"></div>
-                <span>Internal Link</span>
+        <div id="legendContent">
+            <div class="grid grid-cols-2 gap-2 text-sm">
+                <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                        <div class="w-3 h-3" style="clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); background-color: #FFD700;"></div>
+                    </div>
+                    <span class="ml-1">Root URL</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-blue-400 mr-2"></div>
+                    <span>HTML</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-green-400 mr-2"></div>
+                    <span>Image</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-yellow-400 mr-2"></div>
+                    <span>JavaScript</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-purple-400 mr-2"></div>
+                    <span>CSS</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-red-400 mr-2"></div>
+                    <span>Document</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                    <span>Other</span>
+                </div>
             </div>
-            <div class="flex items-center mt-1">
-                <div class="w-8 h-0.5 bg-red-500 mr-2"></div>
-                <span>External Link</span>
+            <div class="mt-2 border-t border-gray-600 pt-2">
+                <div class="flex items-center">
+                    <div class="w-8 h-0.5 bg-green-500 mr-2"></div>
+                    <span>Internal Link</span>
+                </div>
+                <div class="flex items-center mt-1">
+                    <div class="w-8 h-0.5 bg-red-500 mr-2"></div>
+                    <span>External Link</span>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Minimized controls button (initially hidden) -->
+    <button id="expandControls" class="absolute top-2.5 left-2.5 z-10 p-2 bg-black bg-opacity-70 rounded hidden hover:bg-opacity-90 focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+    </button>
+
+    <!-- Minimized legend button (initially hidden) -->
+    <button id="expandLegend" class="absolute bottom-2.5 right-2.5 z-10 p-2 bg-black bg-opacity-70 rounded hidden hover:bg-opacity-90 focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    </button>
     
     <div id="graphContainer" class="absolute top-0 left-0 w-full h-full"></div>
 </body>
