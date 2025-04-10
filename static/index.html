@@ -78,6 +78,15 @@
                 <button id="orbitControls" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">Orbit Controls</button>
                 <button id="flyControls" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded">Fly Controls</button>
             </div>
+            
+            <div class="mb-2.5">
+                <label for="linkWidth" class="block text-sm font-medium mb-1">Link Width:</label>
+                <div class="flex items-center space-x-2">
+                    <input type="range" id="linkWidth" min="0.1" max="3" step="0.1" value="1.5" 
+                           class="w-full bg-gray-800 rounded-lg appearance-none cursor-pointer">
+                    <span id="linkWidthValue" class="text-sm w-8 text-center">1.5</span>
+                </div>
+            </div>
         </div>
         
         <div class="mt-4 border-t border-gray-600 pt-4">

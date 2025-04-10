@@ -25,12 +25,27 @@ let rootNodeUrl = null;
 let currentControlType = 'orbit';
 
 function initializeGraph(controlType = 'orbit') {
-  const container = document.getElementById("graphContainer");
-  container.innerHTML = '';
+  // First, dispose of any existing THREE.js objects
+  if (graph) {
+    // Get the WebGL renderer from the graph
+    const graphElement = document.getElementById("graphContainer");
+    if (graphElement.__graphRenderer) {
+      graphElement.__graphRenderer.dispose();
+    }
+    
+    // Clear the container
+    const container = document.getElementById("graphContainer");
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+  }
   
   const graphInstance = ForceGraph3D({ controlType });
   
-  graph = graphInstance(container)
+  // Get current link width setting
+  const linkWidthValue = parseFloat(document.getElementById("linkWidth").value);
+  
+  graph = graphInstance(document.getElementById("graphContainer"))
     .backgroundColor("#121212")
     .nodeThreeObject(node => {
       if (node.url === rootNodeUrl) {
@@ -51,7 +66,7 @@ function initializeGraph(controlType = 'orbit') {
       const count = nodeConnections[node.id] || 1;
       return nodeSizeScale(count);
     })
-    .linkWidth(1.5)
+    .linkWidth(linkWidthValue)
     .linkColor((link) => getLinkColor({...link, type: getLinkType(link)}))
     .linkCurvature(link => getLinkType(link) === "external" ? 0.25 : 0)
     .linkOpacity(0.8)
@@ -670,4 +685,14 @@ document.getElementById("toggleSimulation").addEventListener("click", () => {
     document.getElementById("toggleSimulation").textContent = "Pause Simulation";
   }
   isSimulationActive = !isSimulationActive;
+});
+
+// Add event listener for link width slider
+document.getElementById("linkWidth").addEventListener("input", function() {
+  const value = parseFloat(this.value);
+  document.getElementById("linkWidthValue").textContent = value.toFixed(1);
+  
+  if (graph) {
+    graph.linkWidth(value);
+  }
 });
