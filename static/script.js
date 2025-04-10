@@ -104,6 +104,7 @@ async function startCrawl() {
   const maxPages = parseInt(document.getElementById("maxPages").value);
   const sameHostOnly = document.getElementById("sameHost").checked;
   const includeAssets = document.getElementById("includeAssets").checked;
+  const crawlJavaScript = document.getElementById("crawlJavaScript").checked;
 
   window.lastDataSize = 0;
   window.stableCount = 0;
@@ -123,6 +124,7 @@ async function startCrawl() {
         maxPages,
         sameHostOnly,
         includeAssets,
+        crawlJavaScript
       }),
     });
 
@@ -366,7 +368,6 @@ document.getElementById("centerGraph").addEventListener("click", () => {
   const { nodes } = graph.graphData();
   if (nodes.length === 0) return;
   
-  // Don't interrupt if orbiting
   if (isOrbiting) return;
 
   const center = {x: 0, y: 0, z: 0};
@@ -380,15 +381,33 @@ document.getElementById("centerGraph").addEventListener("click", () => {
   center.y /= nodes.length;
   center.z /= nodes.length;
   
+  const currentPosition = graph.cameraPosition();
+  const currentTarget = graph.cameraPosition().lookAt || center;
+  
+  const dx = currentPosition.x - currentTarget.x;
+  const dy = currentPosition.y - currentTarget.y;
+  const dz = currentPosition.z - currentTarget.z;
+  const currentDistance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+  
+  const magnitude = Math.sqrt(dx*dx + dy*dy + dz*dz);
+  const unitX = dx / magnitude;
+  const unitY = dy / magnitude;
+  const unitZ = dz / magnitude;
+  
+  const newPosition = {
+    x: center.x + unitX * currentDistance,
+    y: center.y + unitY * currentDistance,
+    z: center.z + unitZ * currentDistance
+  };
+  
   graph.cameraPosition(
-    { x: center.x, y: center.y, z: center.z + distance }, // position
-    { x: center.x, y: center.y, z: center.z },            // lookAt
-    1000                                                  // ms transition duration
+    newPosition,        
+    center,               
+    1000             
   );
 });
 
 document.getElementById("fitGraph").addEventListener("click", () => {
-  // Don't interrupt if orbiting
   if (isOrbiting) return;
   
   graph.zoomToFit(1000, 50);
@@ -403,23 +422,20 @@ document.getElementById("toggleOrbit").addEventListener("click", () => {
     // Stop the orbit animation
     clearInterval(orbitInterval);
     
-    // Re-enable controls
     graph.enableNavigationControls(true);
     graph.enableNodeDrag(true);
     
     isOrbiting = false;
     document.getElementById("toggleOrbit").textContent = "Start Orbit";
     
-    // Restore normal camera position
     graph.zoomToFit(1000, 50);
   } else {
     const graphData = graph.graphData();
     
     if (graphData.nodes.length === 0) {
-      return; // Don't start orbit if no data
+      return;
     }
     
-    // Find the center point of the graph
     const center = {x: 0, y: 0, z: 0};
     graphData.nodes.forEach(node => {
       center.x += node.x || 0;
@@ -431,8 +447,6 @@ document.getElementById("toggleOrbit").addEventListener("click", () => {
     center.y /= graphData.nodes.length;
     center.z /= graphData.nodes.length;
     
-    // Calculate orbit distance - slightly zoomed in from fit state
-    // First determine the appropriate distance based on graph size
     let maxDist = 0;
     graphData.nodes.forEach(node => {
       const dx = (node.x || 0) - center.x;
@@ -442,14 +456,11 @@ document.getElementById("toggleOrbit").addEventListener("click", () => {
       maxDist = Math.max(maxDist, dist);
     });
     
-    // Use 2x the max distance for a slightly zoomed in view (instead of 4x)
-    distance = Math.max(maxDist * 1.5, 300);
+    distance = Math.max(maxDist * 1, 300);
     
-    // Disable navigation controls during orbit
     graph.enableNavigationControls(false);
     graph.enableNodeDrag(false);
     
-    // Initially position the camera
     let angle = 0;
     graph.cameraPosition(
       { 
@@ -457,16 +468,15 @@ document.getElementById("toggleOrbit").addEventListener("click", () => {
         y: center.y,
         z: center.z + distance * Math.cos(angle)
       },
-      center, // lookAt
-      1000    // transition duration
+      center, 
+      1000   
     );
     
-    // After initial positioning, start the orbit
     setTimeout(() => {
-      if (!isOrbiting) return; // In case user cancelled during transition
+      if (!isOrbiting) return;
       
       orbitInterval = setInterval(() => {
-        angle += Math.PI / 2000; // Adjust speed as needed
+        angle += Math.PI / 2000;
         graph.cameraPosition({
           x: center.x + distance * Math.sin(angle),
           y: center.y,
