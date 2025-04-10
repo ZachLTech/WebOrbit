@@ -52,29 +52,12 @@ function initializeGraph(controlType = 'orbit') {
       return nodeSizeScale(count);
     })
     .linkWidth(1.5)
+    .linkColor((link) => getLinkColor({...link, type: getLinkType(link)}))
+    .linkCurvature(link => getLinkType(link) === "external" ? 0.25 : 0)
+    .linkOpacity(0.8)
     .linkDirectionalParticles(2)
     .linkDirectionalParticleSpeed((d) => d.value * 0.001)
     .linkDirectionalParticleWidth(2)
-    .linkColor((link) => {
-      try {
-        const sourceUrl = new URL(link.source);
-        const targetUrl = new URL(link.target);
-        const type = sourceUrl.hostname === targetUrl.hostname ? "internal" : "external";
-        return type === "internal" ? "#4CAF50" : "#FF5722";
-      } catch (e) {
-        return "#2196F3";
-      }
-    })
-    .linkCurvature(link => {
-      try {
-        const sourceUrl = new URL(link.source);
-        const targetUrl = new URL(link.target);
-        return sourceUrl.hostname === targetUrl.hostname ? 0 : 0.25;
-      } catch (e) {
-        return 0;
-      }
-    })
-    .linkOpacity(0.8)
     .onNodeClick((node) => {
       const nodeInfoEl = document.getElementById('nodeInfo');
       if (nodeInfoEl) {
