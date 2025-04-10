@@ -18,10 +18,80 @@ function setErrorStatus() {
 
 // 3D Graph Logic
 
-const Graph = ForceGraph3D();
+let graph;
 let currentCrawlId = null;
 let checkInterval = null;
 let rootNodeUrl = null;
+let currentControlType = 'orbit';
+
+function initializeGraph(controlType = 'orbit') {
+  const container = document.getElementById("graphContainer");
+  container.innerHTML = '';
+  
+  const graphInstance = ForceGraph3D({ controlType });
+  
+  graph = graphInstance(container)
+    .backgroundColor("#121212")
+    .nodeThreeObject(node => {
+      if (node.url === rootNodeUrl) {
+        const star = createStarShape(8);
+        star.__graphObjType = 'node';
+        star.__data = node;
+        return star;
+      }
+      return null;
+    })
+    .nodeThreeObjectExtend(false)
+    .nodeColor(node => getNodeColorByContentType(node.contentType))
+    .nodeLabel((node) => {
+      const count = nodeConnections[node.id] || 0;
+      return `${node.label} (${count} connections)${node.contentType ? '\nType: ' + node.contentType : ''}`;
+    })
+    .nodeVal((node) => {
+      const count = nodeConnections[node.id] || 1;
+      return nodeSizeScale(count);
+    })
+    .linkWidth(1.5)
+    .linkDirectionalParticles(2)
+    .linkDirectionalParticleSpeed((d) => d.value * 0.001)
+    .linkDirectionalParticleWidth(2)
+    .linkColor((link) => {
+      try {
+        const sourceUrl = new URL(link.source);
+        const targetUrl = new URL(link.target);
+        const type = sourceUrl.hostname === targetUrl.hostname ? "internal" : "external";
+        return type === "internal" ? "#4CAF50" : "#FF5722";
+      } catch (e) {
+        return "#2196F3";
+      }
+    })
+    .linkCurvature(link => {
+      try {
+        const sourceUrl = new URL(link.source);
+        const targetUrl = new URL(link.target);
+        return sourceUrl.hostname === targetUrl.hostname ? 0 : 0.25;
+      } catch (e) {
+        return 0;
+      }
+    })
+    .linkOpacity(0.8)
+    .onNodeClick((node) => {
+      const nodeInfoEl = document.getElementById('nodeInfo');
+      if (nodeInfoEl) {
+        nodeInfoEl.innerHTML = `
+          <div class="mb-1"><strong>URL:</strong> <a href="${node.url}" target="_blank" class="text-blue-400">${node.url}</a></div>
+          <div class="mb-1"><strong>Content Type:</strong> ${node.contentType || 'Unknown'}</div>
+          <div class="mb-1"><strong>Connections:</strong> ${nodeConnections[node.id] || 0}</div>
+        `;
+      }
+    })
+    .onNodeRightClick((node) => {
+      graph.centerAt(node.x, node.y, node.z, 1000);
+      graph.zoom(2.5, 1000);
+    });
+  
+  return graph;
+}
 
 const getNodeColorByContentType = (contentType) => {
   if (!contentType) return "#888888";
@@ -106,52 +176,6 @@ const createStarShape = (size = 5, color = 0xFFD700) => {
   
   return mesh;
 };
-
-const graph = Graph(document.getElementById("graphContainer"))
-  .backgroundColor("#121212")
-  .nodeThreeObject(node => {
-    if (node.url === rootNodeUrl) {
-      const star = createStarShape(8);
-      
-      star.__graphObjType = 'node';
-      star.__data = node;
-      
-      return star;
-    }
-    
-    return null;
-  })
-  .nodeThreeObjectExtend(false)
-  .nodeColor(node => getNodeColorByContentType(node.contentType))
-  .nodeLabel((node) => {
-    const count = nodeConnections[node.id] || 0;
-    return `${node.label} (${count} connections)${node.contentType ? '\nType: ' + node.contentType : ''}`;
-  })
-  .nodeVal((node) => {
-    const count = nodeConnections[node.id] || 1;
-    return nodeSizeScale(count);
-  })
-  .linkWidth(1.5)
-  .linkColor((link) => getLinkColor({...link, type: getLinkType(link)}))
-  .linkCurvature(link => getLinkType(link) === "external" ? 0.25 : 0)
-  .linkOpacity(0.8)
-  .linkDirectionalParticles(2)
-  .linkDirectionalParticleSpeed((d) => d.value * 0.001)
-  .linkDirectionalParticleWidth(2)
-  .onNodeClick((node) => {
-    const nodeInfoEl = document.getElementById('nodeInfo');
-    if (nodeInfoEl) {
-      nodeInfoEl.innerHTML = `
-        <div class="mb-1"><strong>URL:</strong> <a href="${node.url}" target="_blank" class="text-blue-400">${node.url}</a></div>
-        <div class="mb-1"><strong>Content Type:</strong> ${node.contentType || 'Unknown'}</div>
-        <div class="mb-1"><strong>Connections:</strong> ${nodeConnections[node.id] || 0}</div>
-      `;
-    }
-  })
-  .onNodeRightClick((node) => {
-    graph.centerAt(node.x, node.y, node.z, 1000);
-    graph.zoom(2.5, 1000);
-  });
 
 document.getElementById("crawlButton").addEventListener("click", startCrawl);
 
@@ -504,8 +528,28 @@ let orbitInterval = null;
 let distance = 300;
 
 document.getElementById("toggleOrbit").addEventListener("click", () => {
+  if (currentControlType !== 'orbit' && !isOrbiting) {
+    const graphData = graph.graphData();
+    const currentPosition = graph.cameraPosition();
+    
+    currentControlType = 'orbit';
+    initializeGraph('orbit');
+    
+    graph.graphData(graphData);
+    
+    if (currentPosition) {
+      graph.cameraPosition(
+        currentPosition,
+        currentPosition.lookAt || { x: 0, y: 0, z: 0 },
+        0
+      );
+    }
+    
+    document.getElementById("orbitControls").classList.add("bg-blue-800");
+    document.getElementById("flyControls").classList.remove("bg-blue-800");
+  }
+  
   if (isOrbiting) {
-    // Stop the orbit animation
     clearInterval(orbitInterval);
     
     graph.enableNavigationControls(true);
@@ -577,6 +621,61 @@ document.getElementById("toggleOrbit").addEventListener("click", () => {
     document.getElementById("toggleOrbit").textContent = "Starting...";
   }
 });
+
+document.getElementById("orbitControls").addEventListener("click", () => {
+  if (currentControlType !== 'orbit') {
+    const graphData = graph.graphData();
+    const currentPosition = graph.cameraPosition();
+    
+    currentControlType = 'orbit';
+    initializeGraph('orbit');
+    
+    graph.graphData(graphData);
+    
+    if (currentPosition) {
+      graph.cameraPosition(
+        currentPosition,
+        currentPosition.lookAt || { x: 0, y: 0, z: 0 },
+        0
+      );
+    }
+    
+    document.getElementById("orbitControls").classList.add("bg-blue-800");
+    document.getElementById("flyControls").classList.remove("bg-blue-800");
+  }
+});
+
+document.getElementById("flyControls").addEventListener("click", () => {
+  if (currentControlType !== 'fly') {
+    if (isOrbiting) {
+      clearInterval(orbitInterval);
+      isOrbiting = false;
+      document.getElementById("toggleOrbit").textContent = "Start Orbit";
+    }
+    
+    const graphData = graph.graphData();
+    const currentPosition = graph.cameraPosition();
+    
+    currentControlType = 'fly';
+    initializeGraph('fly');
+    
+    graph.graphData(graphData);
+    
+    if (currentPosition) {
+      graph.cameraPosition(
+        currentPosition,
+        currentPosition.lookAt || { x: 0, y: 0, z: 0 },
+        0
+      );
+    }
+    
+    document.getElementById("flyControls").classList.add("bg-blue-800");
+    document.getElementById("orbitControls").classList.remove("bg-blue-800");
+  }
+});
+
+graph = initializeGraph('orbit');
+document.getElementById("orbitControls").classList.add("bg-blue-800");
 
 let isSimulationActive = true;
 document.getElementById("toggleSimulation").addEventListener("click", () => {
