@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 // Tailwind styles
 
 const statusElement = document.getElementById('status');
@@ -19,6 +21,7 @@ function setErrorStatus() {
 const Graph = ForceGraph3D();
 let currentCrawlId = null;
 let checkInterval = null;
+let rootNodeUrl = null;
 
 const getNodeColorByContentType = (contentType) => {
   if (!contentType) return "#888888";
@@ -55,8 +58,70 @@ const getLinkType = (link) => {
   }
 };
 
+const createStarShape = (size = 5, color = 0xFFD700) => {
+  const starShape = new THREE.Shape();
+  
+  const points = 5;
+  const outerRadius = size;
+  const innerRadius = size * 0.4;
+  
+  for (let i = 0; i < points * 2; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (Math.PI / points) * i;
+    const x = Math.sin(angle) * radius;
+    const y = Math.cos(angle) * radius;
+    
+    if (i === 0) {
+      starShape.moveTo(x, y);
+    } else {
+      starShape.lineTo(x, y);
+    }
+  }
+  
+  starShape.closePath();
+  
+  const extrudeSettings = {
+    depth: size * 0.6,
+    bevelEnabled: true,
+    bevelThickness: size * 0.05,
+    bevelSize: size * 0.05,
+    bevelSegments: 2
+  };
+  
+  const geometry = new THREE.ExtrudeGeometry(starShape, extrudeSettings);
+  
+  const material = new THREE.MeshStandardMaterial({
+    color: color,
+    metalness: 0.8,
+    roughness: 0.3,
+    emissive: 0x444400,
+    emissiveIntensity: 0.2
+  });
+  
+  const mesh = new THREE.Mesh(geometry, material);
+  
+  material.side = THREE.DoubleSide;
+  
+  mesh.rotation.set(-Math.PI/2, 0, 0);
+  
+  return mesh;
+};
+
 const graph = Graph(document.getElementById("graphContainer"))
   .backgroundColor("#121212")
+  .nodeThreeObject(node => {
+    if (node.url === rootNodeUrl) {
+      const star = createStarShape(8);
+      
+      star.__graphObjType = 'node';
+      star.__data = node;
+      
+      return star;
+    }
+    
+    return null;
+  })
+  .nodeThreeObjectExtend(false)
   .nodeColor(node => getNodeColorByContentType(node.contentType))
   .nodeLabel((node) => {
     const count = nodeConnections[node.id] || 0;
@@ -100,6 +165,9 @@ async function startCrawl() {
     return;
   }
 
+  // Store the root URL for later reference
+  rootNodeUrl = url;
+  
   const maxDepth = parseInt(document.getElementById("maxDepth").value);
   const maxPages = parseInt(document.getElementById("maxPages").value);
   const sameHostOnly = document.getElementById("sameHost").checked;
@@ -358,10 +426,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.getElementById("layout3d").addEventListener("click", () => {
   graph.numDimensions(3);
+  
+  setTimeout(() => {
+    const { nodes } = graph.graphData();
+    nodes.forEach(node => {
+      if (node.url === rootNodeUrl && node.__threeObj) {
+        node.__threeObj.rotation.set(-Math.PI/2, 0, 0);
+      }
+    });
+  }, 100);
 });
 
 document.getElementById("layout2d").addEventListener("click", () => {
   graph.numDimensions(2);
+  
+  setTimeout(() => {
+    const { nodes } = graph.graphData();
+    nodes.forEach(node => {
+      if (node.url === rootNodeUrl && node.__threeObj) {
+        node.__threeObj.rotation.set(0, 0, 0);
+      }
+    });
+  }, 100);
 });
 
 document.getElementById("centerGraph").addEventListener("click", () => {
