@@ -6,7 +6,7 @@ WebOrbit is an interactive 3D website sitemap visualization tool that helps deve
 
 ## 🏆 OwlHacks 2025 Submission
 
-This project is a submission for [OwlHacks 2025](https://owlhacks25.devpost.com). 
+This project is a submission for [OwlHacks 2025](https://devpost.com/software/weborbit). 
 
 ## ✨ Features
 
